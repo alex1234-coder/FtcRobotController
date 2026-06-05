@@ -19,9 +19,9 @@ public class TouchSensorPractice extends OpMode {
     @Override
     public void loop() {
         if(bench.IsTouchSensorPressed())
-            telemetry.addData("pressed!!");
+            telemetry.addData("is","pressed!!");
         else
-            telemetry.addData("not pressed");
+            telemetry.addData("is","not pressed");
 
     }
 }

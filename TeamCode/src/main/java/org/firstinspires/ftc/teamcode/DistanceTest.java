@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.mechanisms.TestBenchDistance;
+
 @TeleOp
+@Disabled
 public class DistanceTest extends OpMode {
     TestBenchDistance bench=new TestBenchDistance();
     double distance;
@@ -17,6 +20,6 @@ public class DistanceTest extends OpMode {
         telemetry.addData("Distance",bench.getDistance());
         distance=bench.getDistance();
         if(distance<10)
-            telemetry.addData("too close !!");
+            telemetry.addData("DIstance","too close !!");
     }
 }
