@@ -39,8 +39,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
@@ -64,6 +66,8 @@ public class StarterBotTeleopMecanums extends OpMode {
     final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
     final double FULL_SPEED = 1.0;
+    final double RAMP_CLOSED=0.2;
+    final double RAMP_OPEN=0.4;
 
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
@@ -82,7 +86,9 @@ public class StarterBotTeleopMecanums extends OpMode {
     private DcMotorEx launcher = null;
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
-
+    private DcMotor Intake=null;
+    private Servo leftRamp=null;
+    private Servo rightRamp=null;
 
     ElapsedTime feederTimer = new ElapsedTime();
 
@@ -136,8 +142,9 @@ public class StarterBotTeleopMecanums extends OpMode {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
-
-
+        Intake=hardwareMap.get(DcMotor.class,"intake");
+        leftRamp=hardwareMap.get(Servo.class,"left_ramp");
+        rightRamp=hardwareMap.get(Servo.class,"right_ramp");
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
          * because the axles point in opposite directions. Pushing the left stick forward
@@ -147,7 +154,7 @@ public class StarterBotTeleopMecanums extends OpMode {
          */
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         /*
@@ -157,7 +164,7 @@ public class StarterBotTeleopMecanums extends OpMode {
          * into the port right beside the motor itself. And that the motors polarity is consistent
          * through any wiring.
          */
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         /*
          * Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to
@@ -169,6 +176,7 @@ public class StarterBotTeleopMecanums extends OpMode {
         leftBackDrive.setZeroPowerBehavior(BRAKE);
         rightBackDrive.setZeroPowerBehavior(BRAKE);
         launcher.setZeroPowerBehavior(BRAKE);
+
 
         /*
          * set Feeders to an initial value to initialize the servo controller
@@ -183,6 +191,9 @@ public class StarterBotTeleopMecanums extends OpMode {
          * both work to feed the ball into the robot.
          */
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRamp.setDirection(Servo.Direction.REVERSE);
+
+
 
         /*
          * Tell the driver that initialization is complete.
@@ -218,7 +229,8 @@ public class StarterBotTeleopMecanums extends OpMode {
          * both motors work to rotate the robot. Combinations of these inputs can be used to create
          * more complex maneuvers.
          */
-        mecanumDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        mecanumDrive(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x);
+
 
         /*
          * Here we give the user control of the speed of the launcher motor without automatically
@@ -230,10 +242,43 @@ public class StarterBotTeleopMecanums extends OpMode {
             launcher.setVelocity(STOP_SPEED);
         }
 
+        if(gamepad1.a)
+        {
+            Intake.setPower(1);
+        }
+        else if(gamepad1.x)
+        {
+            Intake.setPower(-1);
+        }
+        else
+        {
+            Intake.setPower(0);
+        }
+        if(gamepad1.right_trigger_pressed)
+        {
+            leftFeeder.setPower(-1);
+            rightFeeder.setPower(-1);
+        }
+        else
+        {
+            leftFeeder.setPower(0);
+            rightFeeder.setPower(0);
+        }
+        if (gamepad1.dpad_up) {
+            leftRamp.setPosition(RAMP_OPEN);
+            rightRamp.setPosition(RAMP_OPEN);
+        }
+
+        if (gamepad1.dpad_down) {
+            leftRamp.setPosition(RAMP_CLOSED);
+            rightRamp.setPosition(RAMP_CLOSED);
+        }
+
         /*
          * Now we call our "Launch" function.
          */
         launch(gamepad1.rightBumperWasPressed());
+
 
         /*
          * Show the state and motor powers
